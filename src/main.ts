@@ -193,7 +193,7 @@ OPTIONS:
 
 EXAMPLES:
   gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o route.gpx
-  gmaps-gpx "https://www.google.com/maps/dir/..." --output my-route.gpx
+  gmaps-gpx "https://maps.app.goo.gl/..." --output my-route.gpx
 `);
 }
 
