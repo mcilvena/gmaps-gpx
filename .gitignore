@@ -1,0 +1,27 @@
+# Compiled binaries
+gmaps-gpx
+gmaps-gpx.exe
+gmaps-gpx-linux
+gmaps-gpx-macos
+gmaps-gpx-macos-arm
+
+# Test GPX files
+*.gpx
+
+# Deno
+.deno/
+deno.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

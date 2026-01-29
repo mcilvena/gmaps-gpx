@@ -1,0 +1,15 @@
+{
+  "name": "gmaps-gpx",
+  "version": "1.0.0",
+  "exports": "./src/main.ts",
+  "tasks": {
+    "dev": "deno run --allow-net --allow-write src/main.ts",
+    "compile": "deno compile --allow-net --allow-write --output gmaps-gpx src/main.ts",
+    "compile:windows": "deno compile --allow-net --allow-write --target x86_64-pc-windows-msvc --output gmaps-gpx.exe src/main.ts",
+    "compile:linux": "deno compile --allow-net --allow-write --target x86_64-unknown-linux-gnu --output gmaps-gpx-linux src/main.ts",
+    "compile:macos": "deno compile --allow-net --allow-write --target x86_64-apple-darwin --output gmaps-gpx-macos src/main.ts"
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}
