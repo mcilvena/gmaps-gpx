@@ -61,6 +61,7 @@ gmaps-gpx <google-maps-url> -o <output-file>
 
 ### Examples
 
+Using a full Google Maps URL:
 ```bash
 gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o sydney-melbourne.gpx
 ```
