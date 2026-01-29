@@ -22,6 +22,9 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: gmaps-gpx-windows-x64.exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            artifact_name: gmaps-gpx-windows-arm64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: gmaps-gpx-macos-x64
