@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-net --allow-write
 
-import { parseArgs } from "jsr:@std/cli@1/parse-args";
+import { parseArgs } from "@std/cli/parse-args";
 import {
   expandUrl,
   generateGpx,
