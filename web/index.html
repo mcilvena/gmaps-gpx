@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gmaps-gpx - Convert Google Maps to GPX</title>
+  <meta name="description" content="Convert Google Maps route URLs to GPX files for use in navigation apps">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0ea5e9 100%);
+    }
+    .input-focus:focus {
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="gradient-bg text-white py-12 px-4">
+    <div class="max-w-2xl mx-auto text-center">
+      <h1 class="text-4xl font-bold mb-3">gmaps-gpx</h1>
+      <p class="text-primary-100 text-lg">Convert Google Maps routes to GPX files</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-2xl mx-auto px-4 -mt-8">
+    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+      <form id="convertForm" class="space-y-6">
+        <!-- URL Input (Primary) -->
+        <div>
+          <label for="url" class="block text-sm font-semibold text-gray-700 mb-2">
+            Google Maps URL
+            <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="url"
+            id="url"
+            name="url"
+            required
+            placeholder="https://maps.app.goo.gl/... or https://www.google.com/maps/dir/..."
+            class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 transition-colors"
+          >
+          <p class="mt-1.5 text-sm text-gray-500">Paste a Google Maps route or directions URL</p>
+        </div>
+
+        <!-- Optional Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Route Name -->
+          <div>
+            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+              Route Name
+              <span class="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="e.g., Weekend Trip"
+              class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 transition-colors"
+            >
+          </div>
+
+          <!-- Output Filename -->
+          <div>
+            <label for="filename" class="block text-sm font-semibold text-gray-700 mb-2">
+              Filename
+              <span class="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="filename"
+              name="filename"
+              placeholder="e.g., my-route.gpx"
+              class="input-focus w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 transition-colors"
+            >
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="submitBtn"
+          class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span id="btnText">Convert to GPX</span>
+          <span id="btnLoading" class="hidden">
+            <svg class="animate-spin inline-block w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Converting...
+          </span>
+        </button>
+      </form>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <p id="errorText" class="text-red-700 text-sm"></p>
+            <div id="errorTip" class="hidden mt-2 text-red-600 text-sm">
+              <p class="font-medium">How to get the full URL:</p>
+              <ol class="list-decimal list-inside mt-1 space-y-1">
+                <li>Open the shortened link in your browser</li>
+                <li>Wait for it to redirect to Google Maps</li>
+                <li>Copy the full URL from your address bar</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Message -->
+      <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-start">
+          <svg class="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <p class="text-green-700 text-sm font-medium">GPX file created successfully!</p>
+            <p id="waypointCount" class="text-green-600 text-sm mt-1"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="mt-8 mb-12 text-center">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4">Compatible with popular navigation apps</h2>
+      <div class="flex flex-wrap justify-center gap-3 text-sm text-gray-500">
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">BMW Motorrad</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">Scenic</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">Komoot</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">Garmin</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">Strava</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">OsmAnd</span>
+        <span class="px-3 py-1 bg-white rounded-full shadow-sm">Gaia GPS</span>
+      </div>
+      <p class="mt-6 text-sm text-gray-400">
+        <a href="https://github.com/mcilvena/gmaps-gpx" target="_blank" rel="noopener" class="hover:text-primary-600 transition-colors">
+          View on GitHub
+        </a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Load configuration and library -->
+  <script src="config.js"></script>
+  <script src="gmaps-gpx.iife.min.js"></script>
+  <script>
+    // Configuration - set this to your Lambda Function URL
+    const EXPAND_URL_ENDPOINT = window.GMAPS_GPX_EXPAND_URL || null;
+
+    const form = document.getElementById('convertForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnLoading = document.getElementById('btnLoading');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const successMessage = document.getElementById('successMessage');
+    const waypointCount = document.getElementById('waypointCount');
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      btnText.classList.toggle('hidden', loading);
+      btnLoading.classList.toggle('hidden', !loading);
+    }
+
+    function showError(message, showTip = false) {
+      errorText.textContent = message;
+      document.getElementById('errorTip').classList.toggle('hidden', !showTip);
+      errorMessage.classList.remove('hidden');
+      successMessage.classList.add('hidden');
+    }
+
+    function isShortUrl(url) {
+      return url.includes('goo.gl') || url.includes('maps.app.goo.gl');
+    }
+
+    async function expandShortUrl(shortUrl) {
+      if (!EXPAND_URL_ENDPOINT) {
+        throw new Error('URL expansion service not configured');
+      }
+      const response = await fetch(`${EXPAND_URL_ENDPOINT}?url=${encodeURIComponent(shortUrl)}`);
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to expand URL');
+      }
+      const data = await response.json();
+      return data.url;
+    }
+
+    function showSuccess(count) {
+      waypointCount.textContent = `Found ${count} waypoint${count !== 1 ? 's' : ''} in route`;
+      successMessage.classList.remove('hidden');
+      errorMessage.classList.add('hidden');
+    }
+
+    function hideMessages() {
+      errorMessage.classList.add('hidden');
+      successMessage.classList.add('hidden');
+    }
+
+    function downloadFile(content, filename) {
+      const blob = new Blob([content], { type: 'application/gpx+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessages();
+
+      let url = document.getElementById('url').value.trim();
+      const name = document.getElementById('name').value.trim() || undefined;
+      const filename = document.getElementById('filename').value.trim() || undefined;
+
+      // Check for shortened URLs
+      if (isShortUrl(url)) {
+        if (!EXPAND_URL_ENDPOINT) {
+          showError('Shortened URLs cannot be processed directly in the browser.', true);
+          return;
+        }
+        // Try to expand the URL via Lambda
+        setLoading(true);
+        try {
+          url = await expandShortUrl(url);
+        } catch (error) {
+          setLoading(false);
+          showError(error.message || 'Failed to expand shortened URL');
+          return;
+        }
+      }
+
+      setLoading(true);
+
+      try {
+        const result = await GmapsGpx.convertToGpx(url, { routeName: name });
+
+        // Determine filename: user-specified > suggested
+        let outputFilename = filename;
+        if (!outputFilename) {
+          outputFilename = result.suggestedFilename;
+        } else if (!outputFilename.endsWith('.gpx')) {
+          outputFilename += '.gpx';
+        }
+
+        // Download the file
+        downloadFile(result.gpx, outputFilename);
+        showSuccess(result.routeData.waypoints.length);
+      } catch (error) {
+        showError(error.message || 'An unexpected error occurred. Please check the URL and try again.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

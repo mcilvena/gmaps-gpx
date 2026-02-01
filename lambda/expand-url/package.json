@@ -1,0 +1,12 @@
+{
+  "name": "gmaps-gpx-expand-url",
+  "version": "1.0.0",
+  "description": "Cloud Function to expand shortened Google Maps URLs",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0"
+  }
+}

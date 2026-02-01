@@ -52,8 +52,45 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}
 
+  build-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install esbuild
+        run: npm install -g esbuild
+
+      - name: Build web bundle (ESM)
+        run: |
+          mkdir -p dist
+          esbuild src/lib.ts --bundle --format=esm --outfile=dist/gmaps-gpx.esm.js --target=es2020
+          esbuild src/lib.ts --bundle --format=esm --minify --outfile=dist/gmaps-gpx.esm.min.js --target=es2020
+
+      - name: Build web bundle (IIFE for script tag)
+        run: |
+          esbuild src/lib.ts --bundle --format=iife --global-name=GmapsGpx --outfile=dist/gmaps-gpx.iife.js --target=es2020
+          esbuild src/lib.ts --bundle --format=iife --global-name=GmapsGpx --minify --outfile=dist/gmaps-gpx.iife.min.js --target=es2020
+
+      - name: Create zip archive
+        run: |
+          cd dist
+          zip gmaps-gpx-web.zip *.js
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmaps-gpx-web
+          path: dist/gmaps-gpx-web.zip
+
   release:
-    needs: build
+    needs: [build, build-web]
     runs-on: ubuntu-latest
 
     steps:

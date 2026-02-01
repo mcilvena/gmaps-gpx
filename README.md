@@ -53,16 +53,85 @@ deno compile --allow-net --allow-write --target x86_64-apple-darwin --output gma
 deno compile --allow-net --allow-write --target aarch64-apple-darwin --output gmaps-gpx-macos-arm src/main.ts
 ```
 
+### Web Library
+
+A browser-compatible JavaScript bundle is available for use in web applications. Download `gmaps-gpx-web.zip` from the [Releases](releases) page.
+
+**Using ES Modules:**
+```html
+<script type="module">
+  import { convertToGpx, parseGoogleMapsUrl, generateGpx } from './gmaps-gpx.esm.min.js';
+
+  const result = await convertToGpx('https://www.google.com/maps/dir/Sydney/Melbourne', {
+    routeName: 'My Trip'
+  });
+  console.log(result.gpx);
+  console.log(result.suggestedFilename);
+</script>
+```
+
+**Using script tag (IIFE):**
+```html
+<script src="gmaps-gpx.iife.min.js"></script>
+<script>
+  GmapsGpx.convertToGpx('https://www.google.com/maps/dir/Sydney/Melbourne')
+    .then(result => {
+      console.log(result.gpx);
+    });
+</script>
+```
+
+#### Building Web Bundle
+
+```bash
+# Install esbuild
+npm install -g esbuild
+
+# Build ESM bundle
+esbuild src/lib.ts --bundle --format=esm --minify --outfile=dist/gmaps-gpx.esm.min.js
+
+# Build IIFE bundle (for script tags)
+esbuild src/lib.ts --bundle --format=iife --global-name=GmapsGpx --minify --outfile=dist/gmaps-gpx.iife.min.js
+```
+
+### Web App
+
+A ready-to-use web interface is included in the `web/` directory.
+
+```bash
+# Build and serve locally
+make serve
+
+# Deploy to GCP Cloud Storage
+make create-bucket GCS_BUCKET=my-gpx-converter
+make deploy GCS_BUCKET=my-gpx-converter
+
+# Deploy Cloud Function for shortened URL support
+make deploy-function GCP_REGION=us-central1
+# Then update web/config.js with the function URL
+```
+
+The web app files:
+- `index.html` - The single-page application
+- `config.js` - Configuration (Cloud Function URL)
+- `gmaps-gpx.iife.min.js` - The conversion library
+
 ## Usage
 
 ```bash
-gmaps-gpx <google-maps-url> -o <output-file>
+gmaps-gpx <google-maps-url> [options]
 ```
 
 ### Examples
 
-Using a full Google Maps URL:
 ```bash
+# Basic usage (outputs to route-<timestamp>.gpx)
+gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne"
+
+# With custom route name (outputs to weekend-trip-<timestamp>.gpx)
+gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -n "Weekend Trip"
+
+# With explicit output file
 gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o sydney-melbourne.gpx
 ```
 
@@ -70,7 +139,8 @@ gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o sydney-melbourne
 
 | Option | Description |
 |--------|-------------|
-| `-o, --output <path>` | Output file path for the GPX file (required) |
+| `-o, --output <path>` | Output file path (default: `route-<timestamp>.gpx`) |
+| `-n, --name <name>` | Set the route name in the GPX file. Also sets output filename to `<name-slug>-<timestamp>.gpx` |
 | `-h, --help` | Show help message |
 
 ## Compatible Applications
