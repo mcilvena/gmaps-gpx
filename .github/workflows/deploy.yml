@@ -48,9 +48,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy to Cloud Storage
-        run: |
-          gsutil -m rsync -d -r web/ gs://$GCS_BUCKET
-          gsutil web set -m index.html gs://$GCS_BUCKET
+        run: gsutil -m rsync -d -r web/ gs://$GCS_BUCKET
 
   deploy-function:
     name: Deploy Cloud Function
