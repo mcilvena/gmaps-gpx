@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
-      - 'web/**'
-      - 'lambda/**'
-      - '.github/workflows/deploy.yml'
+      - "src/**"
+      - "web/**"
+      - "lambda/**"
+      - ".github/workflows/deploy.yml"
 
 env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Build web bundle
         run: |

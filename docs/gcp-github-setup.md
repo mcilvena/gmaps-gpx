@@ -1,10 +1,13 @@
 # GCP and GitHub Actions Setup Guide
 
-This guide explains how to configure Google Cloud Platform (GCP) and GitHub Actions for automated deployments.
+This guide explains how to configure Google Cloud Platform (GCP) and GitHub
+Actions for automated deployments.
 
 ## Overview
 
-The deployment pipeline uses **Workload Identity Federation** to authenticate GitHub Actions with GCP. This is the recommended approach as it eliminates the need for long-lived service account keys.
+The deployment pipeline uses **Workload Identity Federation** to authenticate
+GitHub Actions with GCP. This is the recommended approach as it eliminates the
+need for long-lived service account keys.
 
 ## Prerequisites
 
@@ -105,21 +108,23 @@ Save this output—you'll need it for GitHub configuration.
 
 ### 1. Add Repository Variables
 
-Go to your repository: **Settings → Secrets and variables → Actions → Variables tab**
+Go to your repository: **Settings → Secrets and variables → Actions → Variables
+tab**
 
 Click **New repository variable** and add:
 
-| Variable | Value |
-|----------|-------|
-| `GCP_PROJECT_ID` | Your GCP project ID |
-| `GCP_SERVICE_ACCOUNT` | `github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com` |
-| `GCP_WORKLOAD_IDENTITY_PROVIDER` | The provider string from step 7 above |
-| `GCS_BUCKET` | Your Cloud Storage bucket name |
-| `GCP_REGION` | Your preferred region (e.g., `us-central1`) |
+| Variable                         | Value                                                    |
+| -------------------------------- | -------------------------------------------------------- |
+| `GCP_PROJECT_ID`                 | Your GCP project ID                                      |
+| `GCP_SERVICE_ACCOUNT`            | `github-actions@YOUR_PROJECT_ID.iam.gserviceaccount.com` |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER` | The provider string from step 7 above                    |
+| `GCS_BUCKET`                     | Your Cloud Storage bucket name                           |
+| `GCP_REGION`                     | Your preferred region (e.g., `us-central1`)              |
 
 ### 2. Workflow Configuration
 
-The workflow must include these permissions for Workload Identity Federation to work:
+The workflow must include these permissions for Workload Identity Federation to
+work:
 
 ```yaml
 permissions:
@@ -174,6 +179,7 @@ gcloud projects get-iam-policy "$PROJECT_ID" \
 ```
 
 Expected roles:
+
 - `roles/cloudfunctions.developer`
 - `roles/iam.serviceAccountUser`
 - `roles/run.developer`
@@ -183,8 +189,10 @@ Expected roles:
 
 ### "Unable to acquire access token"
 
-- Verify the `GCP_WORKLOAD_IDENTITY_PROVIDER` variable matches the output from step 7
-- Check that the repository name in `attribute-condition` matches exactly (case-sensitive)
+- Verify the `GCP_WORKLOAD_IDENTITY_PROVIDER` variable matches the output from
+  step 7
+- Check that the repository name in `attribute-condition` matches exactly
+  (case-sensitive)
 - Ensure the workflow has `id-token: write` permission
 
 ### "Permission denied" errors

@@ -131,9 +131,13 @@ export function parseGoogleMapsUrl(url: string): RouteData {
       // Use all coordinates from the data parameter
       // The first and last are typically start/end, middle ones are via points
       for (let i = 0; i < dataCoords.length; i++) {
-        const name = i < locationNames.length ? locationNames[i] :
-                     (i === 0 ? "Start" :
-                      i === dataCoords.length - 1 ? "End" : `Via ${i}`);
+        const name = i < locationNames.length
+          ? locationNames[i]
+          : (i === 0
+            ? "Start"
+            : i === dataCoords.length - 1
+            ? "End"
+            : `Via ${i}`);
         waypoints.push({
           lat: dataCoords[i].lat,
           lng: dataCoords[i].lng,
@@ -159,13 +163,15 @@ export function parseGoogleMapsUrl(url: string): RouteData {
   if (validWaypoints.length === 0) {
     throw new Error(
       "Could not extract coordinates from the Google Maps URL. " +
-        "The URL format may not be supported or the route data is not accessible."
+        "The URL format may not be supported or the route data is not accessible.",
     );
   }
 
   // Generate route name from waypoint names if available
   if (locationNames.length >= 2) {
-    routeName = `${locationNames[0]} to ${locationNames[locationNames.length - 1]}`;
+    routeName = `${locationNames[0]} to ${
+      locationNames[locationNames.length - 1]
+    }`;
   } else if (validWaypoints.length >= 2) {
     const first = validWaypoints[0].name || "Start";
     const last = validWaypoints[validWaypoints.length - 1].name || "End";
@@ -178,7 +184,10 @@ export function parseGoogleMapsUrl(url: string): RouteData {
 /**
  * Generate GPX XML from route data
  */
-export function generateGpx(routeData: RouteData, customRouteName?: string): string {
+export function generateGpx(
+  routeData: RouteData,
+  customRouteName?: string,
+): string {
   const { waypoints } = routeData;
   const routeName = customRouteName || routeData.routeName;
 
@@ -221,11 +230,14 @@ export function generateGpx(routeData: RouteData, customRouteName?: string): str
  */
 export async function convertToGpx(
   googleMapsUrl: string,
-  options: { routeName?: string } = {}
+  options: { routeName?: string } = {},
 ): Promise<{ gpx: string; routeData: RouteData; suggestedFilename: string }> {
   // Expand shortened URLs
   let fullUrl = googleMapsUrl;
-  if (googleMapsUrl.includes("goo.gl") || googleMapsUrl.includes("maps.app.goo.gl")) {
+  if (
+    googleMapsUrl.includes("goo.gl") ||
+    googleMapsUrl.includes("maps.app.goo.gl")
+  ) {
     fullUrl = await expandUrl(googleMapsUrl);
   }
 
@@ -236,7 +248,9 @@ export async function convertToGpx(
   const gpx = generateGpx(routeData, options.routeName);
 
   // Generate suggested filename
-  const suggestedFilename = generateOutputFilename(options.routeName || routeData.routeName);
+  const suggestedFilename = generateOutputFilename(
+    options.routeName || routeData.routeName,
+  );
 
   return { gpx, routeData, suggestedFilename };
 }

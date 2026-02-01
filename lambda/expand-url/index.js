@@ -3,7 +3,7 @@
  * Deployed as an HTTP-triggered function
  */
 
-const functions = require('@google-cloud/functions-framework');
+const functions = require("@google-cloud/functions-framework");
 
 // =============================================================================
 // Configuration
@@ -11,15 +11,15 @@ const functions = require('@google-cloud/functions-framework');
 
 // Allowed origins for CORS (add your production domain)
 const ALLOWED_ORIGINS = [
-  'http://localhost:8000',
-  'http://localhost:3000',
-  'http://127.0.0.1:8000',
-  'https://storage.googleapis.com', // GCS hosted web app
+  "http://localhost:8000",
+  "http://localhost:3000",
+  "http://127.0.0.1:8000",
+  "https://storage.googleapis.com", // GCS hosted web app
 ];
 
 // Rate limiting: requests per IP per window
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 20;     // 20 requests per minute per IP
+const RATE_LIMIT_MAX_REQUESTS = 20; // 20 requests per minute per IP
 
 // =============================================================================
 // Rate Limiting (in-memory, per-instance)
@@ -67,12 +67,12 @@ function isValidGoogleMapsShortUrl(urlString) {
     const parsed = new URL(urlString);
 
     // Must use HTTPS
-    if (parsed.protocol !== 'https:') {
+    if (parsed.protocol !== "https:") {
       return false;
     }
 
     // Whitelist exact domains only (prevents subdomain bypass)
-    const allowedDomains = ['goo.gl', 'maps.app.goo.gl'];
+    const allowedDomains = ["goo.gl", "maps.app.goo.gl"];
     const hostname = parsed.hostname.toLowerCase();
 
     if (!allowedDomains.includes(hostname)) {
@@ -80,7 +80,7 @@ function isValidGoogleMapsShortUrl(urlString) {
     }
 
     // Must have a path (the short code)
-    if (!parsed.pathname || parsed.pathname === '/') {
+    if (!parsed.pathname || parsed.pathname === "/") {
       return false;
     }
 
@@ -98,12 +98,12 @@ function isValidGoogleMapsUrl(urlString) {
     const parsed = new URL(urlString);
 
     // Must use HTTPS
-    if (parsed.protocol !== 'https:') {
+    if (parsed.protocol !== "https:") {
       return false;
     }
 
     // Whitelist exact Google domains
-    const allowedDomains = ['www.google.com', 'google.com', 'maps.google.com'];
+    const allowedDomains = ["www.google.com", "google.com", "maps.google.com"];
     const hostname = parsed.hostname.toLowerCase();
 
     if (!allowedDomains.includes(hostname)) {
@@ -111,7 +111,7 @@ function isValidGoogleMapsUrl(urlString) {
     }
 
     // Must be a maps path
-    if (!parsed.pathname.startsWith('/maps')) {
+    if (!parsed.pathname.startsWith("/maps")) {
       return false;
     }
 
@@ -126,50 +126,52 @@ function isValidGoogleMapsUrl(urlString) {
 // =============================================================================
 
 function setCorsHeaders(req, res) {
-  const origin = req.get('origin') || req.get('Origin');
+  const origin = req.get("origin") || req.get("Origin");
 
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin);
+    res.set("Access-Control-Allow-Origin", origin);
   } else if (!origin) {
     // Allow requests without origin (e.g., curl, direct API calls)
     // Remove this block if you want to restrict to browser-only
-    res.set('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0]);
+    res.set("Access-Control-Allow-Origin", ALLOWED_ORIGINS[0]);
   }
   // If origin doesn't match, no CORS header is set (browser will block)
 
-  res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
-  res.set('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+  res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type");
+  res.set("Access-Control-Max-Age", "86400"); // Cache preflight for 24 hours
 }
 
 // =============================================================================
 // Main Handler
 // =============================================================================
 
-functions.http('expandUrl', async (req, res) => {
+functions.http("expandUrl", async (req, res) => {
   // Set CORS headers
   setCorsHeaders(req, res);
 
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
     return;
   }
 
   // Only allow GET requests
-  if (req.method !== 'GET') {
-    res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
     return;
   }
 
   // Rate limiting
-  const clientIp = req.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-                   req.get('x-real-ip') ||
-                   req.ip ||
-                   'unknown';
+  const clientIp = req.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.get("x-real-ip") ||
+    req.ip ||
+    "unknown";
 
   if (isRateLimited(clientIp)) {
-    res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    res.status(429).json({
+      error: "Too many requests. Please try again later.",
+    });
     return;
   }
 
@@ -178,41 +180,45 @@ functions.http('expandUrl', async (req, res) => {
     const shortUrl = req.query.url;
 
     if (!shortUrl) {
-      res.status(400).json({ error: 'Missing url parameter' });
+      res.status(400).json({ error: "Missing url parameter" });
       return;
     }
 
     // Validate URL length (prevent DoS)
     if (shortUrl.length > 500) {
-      res.status(400).json({ error: 'URL too long' });
+      res.status(400).json({ error: "URL too long" });
       return;
     }
 
     // Strict validation: must be exact Google Maps short URL domain
     if (!isValidGoogleMapsShortUrl(shortUrl)) {
-      res.status(400).json({ error: 'Only Google Maps shortened URLs (goo.gl, maps.app.goo.gl) are supported' });
+      res.status(400).json({
+        error:
+          "Only Google Maps shortened URLs (goo.gl, maps.app.goo.gl) are supported",
+      });
       return;
     }
 
     // Follow redirects to get the full URL
     const response = await fetch(shortUrl, {
-      method: 'HEAD',
-      redirect: 'follow',
+      method: "HEAD",
+      redirect: "follow",
     });
 
     const expandedUrl = response.url;
 
     // Strict validation: must resolve to Google Maps
     if (!isValidGoogleMapsUrl(expandedUrl)) {
-      res.status(400).json({ error: 'URL did not resolve to a valid Google Maps URL' });
+      res.status(400).json({
+        error: "URL did not resolve to a valid Google Maps URL",
+      });
       return;
     }
 
     res.status(200).json({ url: expandedUrl });
-
   } catch (error) {
     // Log minimal info (don't expose internals)
-    console.error('Error expanding URL:', error.name, error.code);
-    res.status(500).json({ error: 'Failed to expand URL' });
+    console.error("Error expanding URL:", error.name, error.code);
+    res.status(500).json({ error: "Failed to expand URL" });
   }
 });

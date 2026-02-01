@@ -1,12 +1,19 @@
 # gmaps-gpx
 
-A command-line tool that converts Google Maps route URLs to GPX format. Plan your routes in Google Maps, then export them for use in dedicated navigation apps.
+A command-line tool that converts Google Maps route URLs to GPX format. Plan
+your routes in Google Maps, then export them for use in dedicated navigation
+apps.
 
 ## Motivation
 
-Google Maps is excellent for planning routes with its intuitive interface, traffic data, and extensive POI database. However, many navigation apps (especially for motorcycles, cycling, and hiking) don't integrate with Google Maps directly and instead require GPX files for route import.
+Google Maps is excellent for planning routes with its intuitive interface,
+traffic data, and extensive POI database. However, many navigation apps
+(especially for motorcycles, cycling, and hiking) don't integrate with Google
+Maps directly and instead require GPX files for route import.
 
-This tool bridges that gap by converting Google Maps route URLs (including shortened `maps.app.goo.gl` links) into standard GPX files that can be imported into virtually any navigation app.
+This tool bridges that gap by converting Google Maps route URLs (including
+shortened `maps.app.goo.gl` links) into standard GPX files that can be imported
+into virtually any navigation app.
 
 ## Features
 
@@ -20,7 +27,8 @@ This tool bridges that gap by converting Google Maps route URLs (including short
 
 ### Pre-built Binary
 
-Download the latest release for your platform from the [Releases](releases) page.
+Download the latest release for your platform from the [Releases](releases)
+page.
 
 ### Build from Source
 
@@ -55,27 +63,37 @@ deno compile --allow-net --allow-write --target aarch64-apple-darwin --output gm
 
 ### Web Library
 
-A browser-compatible JavaScript bundle is available for use in web applications. Download `gmaps-gpx-web.zip` from the [Releases](releases) page.
+A browser-compatible JavaScript bundle is available for use in web applications.
+Download `gmaps-gpx-web.zip` from the [Releases](releases) page.
 
 **Using ES Modules:**
+
 ```html
 <script type="module">
-  import { convertToGpx, parseGoogleMapsUrl, generateGpx } from './gmaps-gpx.esm.min.js';
+  import {
+    convertToGpx,
+    generateGpx,
+    parseGoogleMapsUrl,
+  } from "./gmaps-gpx.esm.min.js";
 
-  const result = await convertToGpx('https://www.google.com/maps/dir/Sydney/Melbourne', {
-    routeName: 'My Trip'
-  });
+  const result = await convertToGpx(
+    "https://www.google.com/maps/dir/Sydney/Melbourne",
+    {
+      routeName: "My Trip",
+    },
+  );
   console.log(result.gpx);
   console.log(result.suggestedFilename);
 </script>
 ```
 
 **Using script tag (IIFE):**
+
 ```html
 <script src="gmaps-gpx.iife.min.js"></script>
 <script>
-  GmapsGpx.convertToGpx('https://www.google.com/maps/dir/Sydney/Melbourne')
-    .then(result => {
+  GmapsGpx.convertToGpx("https://www.google.com/maps/dir/Sydney/Melbourne")
+    .then((result) => {
       console.log(result.gpx);
     });
 </script>
@@ -112,6 +130,7 @@ make deploy-function GCP_REGION=us-central1
 ```
 
 The web app files:
+
 - `index.html` - The single-page application
 - `config.js` - Configuration (Cloud Function URL)
 - `gmaps-gpx.iife.min.js` - The conversion library
@@ -137,17 +156,20 @@ gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o sydney-melbourne
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `-o, --output <path>` | Output file path (default: `route-<timestamp>.gpx`) |
-| `-n, --name <name>` | Set the route name in the GPX file. Also sets output filename to `<name-slug>-<timestamp>.gpx` |
-| `-h, --help` | Show help message |
+| Option                | Description                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `-o, --output <path>` | Output file path (default: `route-<timestamp>.gpx`)                                            |
+| `-n, --name <name>`   | Set the route name in the GPX file. Also sets output filename to `<name-slug>-<timestamp>.gpx` |
+| `-h, --help`          | Show help message                                                                              |
 
 ## Compatible Applications
 
-This tool was originally created for use with **BMW Motorrad Connected App** navigation, but the generated GPX files are compatible with many popular navigation apps:
+This tool was originally created for use with **BMW Motorrad Connected App**
+navigation, but the generated GPX files are compatible with many popular
+navigation apps:
 
 ### Motorcycle Navigation
+
 - **BMW Motorrad Connected** - The official BMW motorcycle navigation app
 - **Scenic** - Popular motorcycle touring app with offline maps
 - **Rever** - Motorcycle route planning and tracking
@@ -155,6 +177,7 @@ This tool was originally created for use with **BMW Motorrad Connected App** nav
 - **TomTom Rider** - Motorcycle-specific GPS navigation
 
 ### Cycling
+
 - **Komoot** - Route planning with turn-by-turn navigation
 - **Strava** - Popular fitness tracking with route import
 - **Ride with GPS** - Cycling computer with navigation
@@ -162,12 +185,14 @@ This tool was originally created for use with **BMW Motorrad Connected App** nav
 - **Wahoo ELEMNT** - Cycling GPS computers
 
 ### Hiking & Outdoor
+
 - **Gaia GPS** - Comprehensive outdoor navigation
 - **AllTrails** - Hiking and trail navigation
 - **OsmAnd** - Offline maps with GPX support
 - **Locus Map** - Advanced outdoor navigation for Android
 
 ### General Navigation
+
 - **HERE WeGo** - Free offline navigation
 - **GPX Viewer 2** - Universal GPX file viewer
 - **Garmin Connect** - Import routes to Garmin devices
@@ -188,11 +213,13 @@ This tool was originally created for use with **BMW Motorrad Connected App** nav
 ### Deno Installation
 
 **Windows (PowerShell)**:
+
 ```powershell
 irm https://deno.land/install.ps1 | iex
 ```
 
 **macOS/Linux**:
+
 ```bash
 curl -fsSL https://deno.land/install.sh | sh
 ```
