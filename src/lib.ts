@@ -133,9 +133,14 @@ export function parseGoogleMapsUrl(url: string): RouteData {
     }
   }
 
+  const genericName = (i: number) =>
+    i === 0 ? "Start" : i === dataCoords.length - 1 ? "End" : `Via ${i}`;
   const places = dataCoords.filter((c) => !c.via);
+  // Only trust the path's place names if they line up one-to-one with the
+  // places in the data; otherwise fall back to generic names
+  const namesAligned = places.length === locationNames.length;
 
-  if (dataCoords.length > 0 && places.length === locationNames.length) {
+  if (dataCoords.length > 0) {
     // Merge path and data in route order: named places take their
     // coordinates from the data, dropped pins keep their path coordinates,
     // and via points are inserted where they occur.
@@ -147,37 +152,27 @@ export function parseGoogleMapsUrl(url: string): RouteData {
       }
     };
 
-    for (const coord of dataCoords) {
+    dataCoords.forEach((coord, i) => {
       if (coord.via) {
         viaCount++;
         waypoints.push({
           lat: coord.lat,
           lng: coord.lng,
-          name: `Via ${viaCount}`,
+          name: namesAligned ? `Via ${viaCount}` : genericName(i),
         });
-        continue;
+        return;
       }
       // Via points belong to the leg leaving the previous stop, so dropped
       // pins are only placed once the next named place is reached
       emitDroppedPins();
+      const stop = next < pathStops.length ? pathStops[next++] : undefined;
       waypoints.push({
         lat: coord.lat,
         lng: coord.lng,
-        name: pathStops[next++].name,
+        name: namesAligned && stop ? stop.name : genericName(i),
       });
-    }
+    });
     emitDroppedPins();
-  } else if (dataCoords.length > 0) {
-    // Can't line the data up with the path, so use the data coordinates
-    // alone with generic names
-    for (let i = 0; i < dataCoords.length; i++) {
-      const name = i === 0
-        ? "Start"
-        : i === dataCoords.length - 1
-        ? "End"
-        : `Via ${i}`;
-      waypoints.push({ lat: dataCoords[i].lat, lng: dataCoords[i].lng, name });
-    }
   } else {
     // No data parameter - only dropped pins in the path have coordinates
     waypoints.push(...pathStops.filter((s) => s.name === undefined));

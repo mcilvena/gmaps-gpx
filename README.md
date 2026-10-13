@@ -78,7 +78,7 @@ import {
 } from "./gmaps-gpx.esm.min.js";
 
 const result = await convertToGpx(
-  "https://maps.app.goo.gl/...",
+  "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=...",
   {
     routeName: "My Trip",
   },
@@ -93,12 +93,18 @@ console.log(result.suggestedFilename);
 ```html
 <script src="gmaps-gpx.iife.min.js"></script>
 <script>
-GmapsGpx.convertToGpx("https://maps.app.goo.gl/...")
+GmapsGpx.convertToGpx(
+  "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=...",
+)
   .then((result) => {
     console.log(result.gpx);
   });
 </script>
 ```
+
+In a browser, pass a full Google Maps URL. Shortened `maps.app.goo.gl` links
+can't be expanded from the browser because of CORS; expand them first through
+the Cloud Function in `lambda/expand-url` (as `web/index.html` does).
 
 #### Building Web Bundle
 
