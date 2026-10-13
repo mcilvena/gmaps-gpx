@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Build web bundle
         run: |
@@ -75,7 +75,7 @@ jobs:
           gcloud functions deploy $FUNCTION_NAME \
             --gen2 \
             --region=$GCP_REGION \
-            --runtime=nodejs20 \
+            --runtime=nodejs22 \
             --source=lambda/expand-url \
             --entry-point=expandUrl \
             --trigger-http \

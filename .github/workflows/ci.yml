@@ -17,7 +17,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: v2.9.6
 
       - name: Check formatting
         run: deno fmt --check
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: v2.9.6
 
       - name: Build binary
         run: deno compile --allow-net --allow-write --output gmaps-gpx src/main.ts

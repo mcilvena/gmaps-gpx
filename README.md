@@ -1,8 +1,9 @@
 # gmaps-gpx
 
-A command-line tool (and [website](https://storage.googleapis.com/gmaps-gpx-prod/index.html)) that converts Google Maps route URLs to GPX format. Plan
-your routes in Google Maps, then export them for use in dedicated navigation
-apps.
+A command-line tool (and
+[website](https://storage.googleapis.com/gmaps-gpx-prod/index.html)) that
+converts Google Maps route URLs to GPX format. Plan your routes in Google Maps,
+then export them for use in dedicated navigation apps.
 
 ## Motivation
 
@@ -70,20 +71,20 @@ Download `gmaps-gpx-web.zip` from the [Releases](releases) page.
 
 ```html
 <script type="module">
-  import {
-    convertToGpx,
-    generateGpx,
-    parseGoogleMapsUrl,
-  } from "./gmaps-gpx.esm.min.js";
+import {
+  convertToGpx,
+  generateGpx,
+  parseGoogleMapsUrl,
+} from "./gmaps-gpx.esm.min.js";
 
-  const result = await convertToGpx(
-    "https://www.google.com/maps/dir/Sydney/Melbourne",
-    {
-      routeName: "My Trip",
-    },
-  );
-  console.log(result.gpx);
-  console.log(result.suggestedFilename);
+const result = await convertToGpx(
+  "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=...",
+  {
+    routeName: "My Trip",
+  },
+);
+console.log(result.gpx);
+console.log(result.suggestedFilename);
 </script>
 ```
 
@@ -92,12 +93,18 @@ Download `gmaps-gpx-web.zip` from the [Releases](releases) page.
 ```html
 <script src="gmaps-gpx.iife.min.js"></script>
 <script>
-  GmapsGpx.convertToGpx("https://www.google.com/maps/dir/Sydney/Melbourne")
-    .then((result) => {
-      console.log(result.gpx);
-    });
+GmapsGpx.convertToGpx(
+  "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=...",
+)
+  .then((result) => {
+    console.log(result.gpx);
+  });
 </script>
 ```
+
+In a browser, pass a full Google Maps URL. Shortened `maps.app.goo.gl` links
+can't be expanded from the browser because of CORS; expand them first through
+the Cloud Function in `lambda/expand-url` (as `web/index.html` does).
 
 #### Building Web Bundle
 
@@ -144,15 +151,23 @@ gmaps-gpx <google-maps-url> [options]
 ### Examples
 
 ```bash
-# Basic usage (outputs to route-<timestamp>.gpx)
-gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne"
+# Basic usage with a Share link (outputs to route-<timestamp>.gpx)
+gmaps-gpx "https://maps.app.goo.gl/..."
+
+# Full URL copied from the browser address bar
+gmaps-gpx "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=..."
 
 # With custom route name (outputs to weekend-trip-<timestamp>.gpx)
-gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -n "Weekend Trip"
+gmaps-gpx "https://maps.app.goo.gl/..." -n "Weekend Trip"
 
 # With explicit output file
-gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne" -o sydney-melbourne.gpx
+gmaps-gpx "https://maps.app.goo.gl/..." -o sydney-melbourne.gpx
 ```
+
+The URL must contain coordinates: use a Google Maps Share link
+(`maps.app.goo.gl`) or the full URL from the address bar, which includes a
+`data=` section. A URL with only place names, such as
+`https://www.google.com/maps/dir/Sydney/Melbourne`, can't be converted.
 
 ### Options
 

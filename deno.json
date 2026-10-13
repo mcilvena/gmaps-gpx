@@ -5,9 +5,7 @@
   "imports": {
     "@std/cli": "jsr:@std/cli@1"
   },
-  "lint": {
-    "exclude": ["web/gmaps-gpx.iife.min.js"]
-  },
+  "exclude": ["web/gmaps-gpx.iife.min.js"],
   "tasks": {
     "dev": "deno run --allow-net --allow-write src/main.ts",
     "compile": "deno compile --allow-net --allow-write --output gmaps-gpx src/main.ts",

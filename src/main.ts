@@ -24,8 +24,13 @@ OPTIONS:
                         Also sets output filename to <name-slug>-<timestamp>.gpx
   -h, --help            Show this help message
 
+Use a Share link (maps.app.goo.gl) or the full URL from the address bar.
+A URL with only place names (e.g. /maps/dir/Sydney/Melbourne) has no
+coordinates and can't be converted.
+
 EXAMPLES:
-  gmaps-gpx "https://www.google.com/maps/dir/Sydney/Melbourne"
+  gmaps-gpx "https://maps.app.goo.gl/..."
+  gmaps-gpx "https://www.google.com/maps/dir/Sydney+NSW/Melbourne+VIC/@.../data=..."
   gmaps-gpx "https://maps.app.goo.gl/..." -n "Weekend Trip"
   gmaps-gpx "https://maps.app.goo.gl/..." -o custom-output.gpx
 `);

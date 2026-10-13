@@ -68,32 +68,41 @@ export async function expandUrl(shortUrl: string): Promise<string> {
 export function parseGoogleMapsUrl(url: string): RouteData {
   const waypoints: Coordinate[] = [];
   let routeName = "Google Maps Route";
-  const locationNames: string[] = [];
 
   // Handle different Google Maps URL formats
   const urlObj = new URL(url);
 
   // Format 1: /dir/ URLs with waypoints
   // Example: https://www.google.com/maps/dir/Start/End/@lat,lng,zoom
-  const dirMatch = url.match(/\/maps\/dir\/([^@]+)/);
+  // Each path segment is either a place name or a dropped pin ("lat,lng").
+  const pathStops: Coordinate[] = [];
+  const dirMatch = url.match(/\/maps\/dir\/([^@?]+)/);
   if (dirMatch) {
-    const pathPart = dirMatch[1];
-    const locations = pathPart.split("/").filter((s) => s.trim() !== "");
+    const locations = dirMatch[1]
+      .split("/")
+      .filter((s) => s.trim() !== "" && !s.startsWith("data="));
 
     for (const loc of locations) {
       // Check if it's a coordinate pair
       const coordMatch = loc.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
       if (coordMatch) {
-        waypoints.push({
+        pathStops.push({
           lat: parseFloat(coordMatch[1]),
           lng: parseFloat(coordMatch[2]),
         });
       } else {
-        // It's a place name - save it for later
-        locationNames.push(decodeURIComponent(loc.replace(/\+/g, " ")));
+        // A place name - its coordinates come from the data parameter
+        pathStops.push({
+          lat: NaN,
+          lng: NaN,
+          name: decodeURIComponent(loc.replace(/\+/g, " ")),
+        });
       }
     }
   }
+  const locationNames = pathStops
+    .filter((s) => s.name !== undefined)
+    .map((s) => s.name as string);
 
   // Try to extract coordinates from the data parameter (contains encoded route info)
   // The data can be in the query string OR in the URL path as /data=...
@@ -107,50 +116,73 @@ export function parseGoogleMapsUrl(url: string): RouteData {
     }
   }
 
+  // Data parameter contains encoded coordinates, in route order:
+  // !2m2!1d[lng]!2d[lat] - coordinates of a named place
+  // !1m2!1d[lng]!2d[lat] - via point (from dragging the route)
+  // Dropped pins are not encoded here; they only appear in the path.
+  const dataCoords: { lat: number; lng: number; via: boolean }[] = [];
   if (dataParam) {
-    // Data parameter contains encoded waypoint coordinates in various formats:
-    // !2m2!1d[lng]!2d[lat] - destination/waypoint coordinates
-    // !1m2!1d[lng]!2d[lat] - via point coordinates
-    // The pattern is always !1d[lng]!2d[lat] for the actual numbers
-
-    // Find all !1d[lng]!2d[lat] patterns
-    const coordRegex = /!1d(-?\d+\.?\d*)!2d(-?\d+\.?\d*)/g;
+    const coordRegex = /!(\d+)m2!1d(-?\d+\.?\d*)!2d(-?\d+\.?\d*)/g;
     let match;
-    const dataCoords: Coordinate[] = [];
     while ((match = coordRegex.exec(dataParam)) !== null) {
       dataCoords.push({
-        lat: parseFloat(match[2]),
-        lng: parseFloat(match[1]),
+        lat: parseFloat(match[3]),
+        lng: parseFloat(match[2]),
+        via: match[1] !== "2",
       });
     }
+  }
 
-    if (dataCoords.length > 0) {
-      // Clear any waypoints from the @ coordinate since we have better data
-      waypoints.length = 0;
+  const genericName = (i: number) =>
+    i === 0 ? "Start" : i === dataCoords.length - 1 ? "End" : `Via ${i}`;
+  const places = dataCoords.filter((c) => !c.via);
+  // Only trust the path's place names if they line up one-to-one with the
+  // places in the data; otherwise fall back to generic names
+  const namesAligned = places.length === locationNames.length;
 
-      // Use all coordinates from the data parameter
-      // The first and last are typically start/end, middle ones are via points
-      for (let i = 0; i < dataCoords.length; i++) {
-        const name = i < locationNames.length
-          ? locationNames[i]
-          : (i === 0
-            ? "Start"
-            : i === dataCoords.length - 1
-            ? "End"
-            : `Via ${i}`);
-        waypoints.push({
-          lat: dataCoords[i].lat,
-          lng: dataCoords[i].lng,
-          name: name,
-        });
+  if (dataCoords.length > 0) {
+    // Merge path and data in route order: named places take their
+    // coordinates from the data, dropped pins keep their path coordinates,
+    // and via points are inserted where they occur.
+    let next = 0;
+    let viaCount = 0;
+    const emitDroppedPins = () => {
+      while (next < pathStops.length && pathStops[next].name === undefined) {
+        waypoints.push(pathStops[next++]);
       }
-    }
+    };
+
+    dataCoords.forEach((coord, i) => {
+      if (coord.via) {
+        viaCount++;
+        waypoints.push({
+          lat: coord.lat,
+          lng: coord.lng,
+          name: namesAligned ? `Via ${viaCount}` : genericName(i),
+        });
+        return;
+      }
+      // Via points belong to the leg leaving the previous stop, so dropped
+      // pins are only placed once the next named place is reached
+      emitDroppedPins();
+      const stop = next < pathStops.length ? pathStops[next++] : undefined;
+      waypoints.push({
+        lat: coord.lat,
+        lng: coord.lng,
+        name: namesAligned && stop ? stop.name : genericName(i),
+      });
+    });
+    emitDroppedPins();
+  } else {
+    // No data parameter - only dropped pins in the path have coordinates
+    waypoints.push(...pathStops.filter((s) => s.name === undefined));
   }
 
   // Format 2: Place URL with coordinates in path
   // Example: https://www.google.com/maps/place/.../@lat,lng,zoom
+  // Skipped for /dir/ URLs, where @ is just the map viewport centre.
   const placeCoordMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-  if (placeCoordMatch && waypoints.length === 0) {
+  if (placeCoordMatch && waypoints.length === 0 && !dirMatch) {
     waypoints.push({
       lat: parseFloat(placeCoordMatch[1]),
       lng: parseFloat(placeCoordMatch[2]),
@@ -161,6 +193,13 @@ export function parseGoogleMapsUrl(url: string): RouteData {
   const validWaypoints = waypoints.filter((w) => w.lat !== 0 || w.lng !== 0);
 
   if (validWaypoints.length === 0) {
+    if (locationNames.length > 0) {
+      throw new Error(
+        "This URL only contains place names, not coordinates. " +
+          "Open the route in Google Maps and copy the full URL from the " +
+          "address bar, or use the Share link (maps.app.goo.gl).",
+      );
+    }
     throw new Error(
       "Could not extract coordinates from the Google Maps URL. " +
         "The URL format may not be supported or the route data is not accessible.",
