@@ -85,7 +85,7 @@ deploy-function:
 	gcloud functions deploy $(FUNCTION_NAME) \
 		--gen2 \
 		--region=$(GCP_REGION) \
-		--runtime=nodejs20 \
+		--runtime=nodejs22 \
 		--source=$(FUNCTION_DIR) \
 		--entry-point=expandUrl \
 		--trigger-http \

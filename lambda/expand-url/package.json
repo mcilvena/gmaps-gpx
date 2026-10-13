@@ -4,7 +4,7 @@
   "description": "Cloud Function to expand shortened Google Maps URLs",
   "main": "index.js",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.0.0"
